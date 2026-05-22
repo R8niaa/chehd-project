@@ -1,0 +1,1789 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L'Enquête de l'Atelier — Cas Clinique 23</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        :root {
+            --black: #060608;
+            --dark: #0c0d12;
+            --card: #13151e;
+            --border: #1f2333;
+            --orange: #f97316;
+            --amber: #f59e0b;
+            --red: #dc2626;
+            --cream: #f5f0e8;
+            --muted: #6b7280;
+            --text: #e8e6e1;
+            --text2: #9ca3af;
+            --green: #22c55e;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: var(--black)
+        }
+
+        body {
+            font-family: 'Crimson Pro', Georgia, serif;
+            color: var(--text)
+        }
+
+        /* ── SLIDE ENGINE ── */
+        .deck {
+            width: 100vw;
+            height: 100vh;
+            position: relative
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4vw 6vw;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .5s ease, transform .5s ease;
+            transform: translateX(60px);
+            overflow: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: all;
+            transform: translateX(0)
+        }
+
+        .slide.exit {
+            opacity: 0;
+            transform: translateX(-60px)
+        }
+
+        /* ── NAV ── */
+        .nav {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            background: rgba(13, 15, 20, .85);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            padding: .6rem 1.4rem;
+            z-index: 100;
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: .3rem .6rem;
+            border-radius: 6px;
+            transition: all .2s;
+            font-family: 'Crimson Pro', serif;
+        }
+
+        .nav-btn:hover {
+            color: var(--orange);
+            background: rgba(249, 115, 22, .1)
+        }
+
+        .slide-counter {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .72rem;
+            color: var(--muted);
+            letter-spacing: .1em;
+            min-width: 48px;
+            text-align: center;
+        }
+
+        .dot-row {
+            display: flex;
+            gap: .4rem;
+            align-items: center
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--border);
+            transition: all .3s;
+            cursor: pointer
+        }
+
+        .dot.on {
+            background: var(--orange);
+            width: 18px;
+            border-radius: 4px
+        }
+
+        /* ── PROGRESS BAR ── */
+        .prog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: var(--orange);
+            transition: width .4s ease;
+            z-index: 200
+        }
+
+        /* keyboard hint */
+        .key-hint {
+            position: fixed;
+            bottom: 5.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .65rem;
+            color: var(--muted);
+            letter-spacing: .1em;
+            opacity: .6;
+        }
+
+        /* ══════════════════════════════════
+   SLIDE 0 — COVER
+══════════════════════════════════ */
+        #s0 {
+            background: var(--black);
+            background-image:
+                repeating-linear-gradient(0deg, transparent, transparent 49px, rgba(249, 115, 22, .04) 49px, rgba(249, 115, 22, .04) 50px),
+                repeating-linear-gradient(90deg, transparent, transparent 49px, rgba(249, 115, 22, .04) 49px, rgba(249, 115, 22, .04) 50px);
+        }
+
+        .cover-tape {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: repeating-linear-gradient(90deg, var(--orange) 0, var(--orange) 24px, var(--amber) 24px, var(--amber) 48px);
+        }
+
+        .cover-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .75rem;
+            letter-spacing: .2em;
+            color: var(--orange);
+            text-transform: uppercase;
+            margin-bottom: 1.4rem;
+            opacity: 0;
+            animation: fadeUp .6s .2s ease forwards;
+        }
+
+        .cover-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(4rem, 12vw, 9rem);
+            line-height: .92;
+            letter-spacing: .02em;
+            text-align: center;
+            color: var(--cream);
+            opacity: 0;
+            animation: fadeUp .7s .4s ease forwards;
+            position: relative;
+        }
+
+        .cover-title .accent {
+            color: var(--orange);
+            display: block
+        }
+
+        .cover-subtitle {
+            font-size: 1.1rem;
+            font-style: italic;
+            color: var(--text2);
+            margin-top: 1.4rem;
+            text-align: center;
+            opacity: 0;
+            animation: fadeUp .6s .7s ease forwards;
+            letter-spacing: .02em;
+        }
+
+        .cover-case {
+            position: absolute;
+            bottom: 3.5rem;
+            right: 4vw;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .7rem;
+            color: var(--muted);
+            letter-spacing: .12em;
+            text-align: right;
+            opacity: 0;
+            animation: fadeUp .5s 1s ease forwards;
+        }
+
+        .cover-stamp {
+            position: absolute;
+            top: 3rem;
+            left: 4vw;
+            border: 3px solid var(--red);
+            color: var(--red);
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.8rem;
+            padding: .3rem .8rem;
+            letter-spacing: .1em;
+            transform: rotate(-8deg);
+            opacity: 0;
+            animation: stampIn .4s 1.1s ease forwards;
+        }
+
+        @keyframes stampIn {
+            from {
+                opacity: 0;
+                transform: rotate(-8deg) scale(1.4)
+            }
+
+            to {
+                opacity: 1;
+                transform: rotate(-8deg) scale(1)
+            }
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        /* ══════════════════════════════════
+   SLIDE 1 — ACTE 1 HEADER
+══════════════════════════════════ */
+        .act-slide {
+            background: var(--dark)
+        }
+
+        .act-number {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(8rem, 20vw, 16rem);
+            color: rgba(249, 115, 22, .07);
+            position: absolute;
+            right: -2vw;
+            bottom: -3vh;
+            line-height: 1;
+            pointer-events: none;
+            letter-spacing: -.02em;
+        }
+
+        .act-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .8rem;
+            letter-spacing: .2em;
+            color: var(--orange);
+            margin-bottom: .8rem;
+        }
+
+        .act-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(2.5rem, 7vw, 5.5rem);
+            line-height: 1;
+            color: var(--cream);
+            margin-bottom: 1rem;
+        }
+
+        .act-desc {
+            font-size: 1.15rem;
+            font-style: italic;
+            color: var(--text2);
+            max-width: 580px;
+            line-height: 1.7;
+        }
+
+        .act-line {
+            width: 60px;
+            height: 3px;
+            background: var(--orange);
+            margin-bottom: 1.2rem
+        }
+
+        /* ══════════════════════════════════
+   SLIDE 2 — PORTRAIT KARIM
+══════════════════════════════════ */
+        .portrait-slide {
+            background: var(--dark);
+            display: grid !important;
+            grid-template-columns: 1fr 1fr;
+            gap: 4vw;
+            align-items: center;
+        }
+
+        .portrait-left {}
+
+        .portrait-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .7rem;
+            letter-spacing: .18em;
+            color: var(--red);
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .portrait-label::before {
+            content: '';
+            width: 24px;
+            height: 2px;
+            background: var(--red)
+        }
+
+        .portrait-name {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            line-height: 1;
+            color: var(--cream);
+            margin-bottom: 1.2rem;
+        }
+
+        .portrait-facts {
+            display: flex;
+            flex-direction: column;
+            gap: .7rem
+        }
+
+        .fact {
+            display: flex;
+            align-items: baseline;
+            gap: .8rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: .7rem;
+        }
+
+        .fact-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .65rem;
+            color: var(--muted);
+            letter-spacing: .12em;
+            min-width: 90px;
+            flex-shrink: 0;
+        }
+
+        .fact-value {
+            font-size: 1rem;
+            color: var(--text);
+            line-height: 1.4
+        }
+
+        .fact-value .hl {
+            color: var(--orange);
+            font-weight: 600
+        }
+
+        .portrait-right {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .portrait-right::before {
+            content: 'DOSSIER\A PATIENT';
+            white-space: pre;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 4rem;
+            color: rgba(249, 115, 22, .05);
+            position: absolute;
+            bottom: -1rem;
+            right: -1rem;
+            line-height: 1;
+            letter-spacing: .05em;
+            text-align: right;
+        }
+
+        .atelier-visual {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .vis-row {
+            display: flex;
+            align-items: center;
+            gap: .8rem;
+            font-size: .9rem;
+            color: var(--text2);
+            line-height: 1.5;
+        }
+
+        .vis-icon {
+            font-size: 1.6rem;
+            flex-shrink: 0;
+            width: 36px;
+            text-align: center
+        }
+
+        .vis-bar {
+            margin-top: .3rem;
+            height: 4px;
+            border-radius: 2px;
+            background: linear-gradient(90deg, var(--orange) var(--w), var(--border) var(--w));
+        }
+
+        /* ══════════════════════════════════
+   SLIDE 3 — SCÈNE DE CRIME
+══════════════════════════════════ */
+        .crime-slide {
+            background: var(--black);
+            display: grid !important;
+            grid-template-columns: 1fr 1fr;
+            gap: 3vw;
+            align-items: center;
+        }
+
+        .crime-left {}
+
+        .crime-headline {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(2rem, 5vw, 3.8rem);
+            line-height: 1.05;
+            color: var(--cream);
+            margin-bottom: 1rem;
+        }
+
+        .crime-headline .villain {
+            color: var(--red)
+        }
+
+        .crime-body {
+            font-size: 1rem;
+            color: var(--text2);
+            line-height: 1.8;
+            margin-bottom: 1.4rem;
+            border-left: 2px solid var(--orange);
+            padding-left: 1rem;
+            font-style: italic;
+        }
+
+        .timeline-mini {
+            display: flex;
+            flex-direction: column;
+            gap: .6rem
+        }
+
+        .tm-item {
+            display: flex;
+            align-items: center;
+            gap: .8rem;
+            font-size: .88rem;
+            color: var(--text2);
+        }
+
+        .tm-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .tm-dot.r {
+            background: var(--red)
+        }
+
+        .tm-dot.o {
+            background: var(--orange)
+        }
+
+        .tm-dot.g {
+            background: var(--green)
+        }
+
+        .tm-year {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .7rem;
+            color: var(--muted);
+            min-width: 44px;
+        }
+
+        .crime-right {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .evidence-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.1rem 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            position: relative;
+            overflow: hidden;
+            transition: border-color .3s;
+        }
+
+        .evidence-card::after {
+            content: 'PIÈCE À CONVICTION';
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .5rem;
+            letter-spacing: .15em;
+            color: rgba(249, 115, 22, .2);
+            position: absolute;
+            top: .4rem;
+            right: .6rem;
+        }
+
+        .ev-num {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.2rem;
+            color: var(--orange);
+            line-height: 1;
+            min-width: 36px;
+        }
+
+        .ev-body {}
+
+        .ev-title {
+            font-size: .85rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: .2rem
+        }
+
+        .ev-desc {
+            font-size: .8rem;
+            color: var(--muted);
+            line-height: 1.4
+        }
+
+        /* ══════════════════════════════════
+   SLIDE 4 — ACTE 2 HEADER
+══════════════════════════════════ */
+
+        /* ══════════════════════════════════
+   SLIDE 5 — PREUVES PARACLINIQUES
+══════════════════════════════════ */
+        .proof-slide {
+            background: var(--dark);
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5vw;
+            align-items: start;
+            padding-top: 3rem !important;
+        }
+
+        .proof-header {
+            grid-column: 1/-1;
+            margin-bottom: .5rem;
+        }
+
+        .proof-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .7rem;
+            letter-spacing: .2em;
+            color: var(--orange);
+            margin-bottom: .4rem;
+        }
+
+        .proof-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(1.8rem, 4vw, 3rem);
+            color: var(--cream);
+        }
+
+        .proof-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.4rem;
+            transition: border-color .3s, transform .3s;
+        }
+
+        .proof-card:hover {
+            border-color: var(--orange);
+            transform: translateY(-4px)
+        }
+
+        .pc-icon {
+            font-size: 2rem;
+            margin-bottom: .8rem
+        }
+
+        .pc-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .62rem;
+            letter-spacing: .15em;
+            color: var(--muted);
+            margin-bottom: .3rem;
+        }
+
+        .pc-name {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.4rem;
+            color: var(--cream);
+            margin-bottom: .5rem
+        }
+
+        .pc-result {
+            font-size: .88rem;
+            color: var(--text2);
+            line-height: 1.6;
+            border-top: 1px solid var(--border);
+            padding-top: .7rem;
+            margin-top: .5rem;
+        }
+
+        .pc-result .pos {
+            color: var(--green);
+            font-weight: 600
+        }
+
+        .pc-result .neg {
+            color: var(--red);
+            font-weight: 600
+        }
+
+        .pc-result .warn {
+            color: var(--orange);
+            font-weight: 600
+        }
+
+        /* bar chart */
+        .mini-bar-wrap {
+            margin-top: .8rem
+        }
+
+        .mini-bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: .7rem;
+            color: var(--muted);
+            margin-bottom: .3rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .mini-bar {
+            height: 8px;
+            border-radius: 4px;
+            background: var(--border);
+            overflow: hidden;
+            margin-bottom: .4rem
+        }
+
+        .mini-fill {
+            height: 100%;
+            border-radius: 4px;
+            animation: fillBar 1.2s ease forwards
+        }
+
+        @keyframes fillBar {
+            from {
+                width: 0
+            }
+
+            to {
+                width: var(--w)
+            }
+        }
+
+        .mini-fill.orange {
+            background: var(--orange)
+        }
+
+        .mini-fill.green {
+            background: var(--green)
+        }
+
+        .mini-fill.red {
+            background: var(--red)
+        }
+
+        /* ══════════════════════════════════
+   SLIDE 6 — ACTE 3 / VERDICT
+══════════════════════════════════ */
+        .verdict-slide {
+            background: var(--black);
+            background-image: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(220, 38, 38, .06) 0%, transparent 70%);
+            display: grid !important;
+            grid-template-columns: 1fr 1fr;
+            gap: 4vw;
+            align-items: center;
+        }
+
+        .verdict-left {}
+
+        .verdict-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .72rem;
+            letter-spacing: .2em;
+            color: var(--red);
+            margin-bottom: .8rem;
+        }
+
+        .verdict-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(2.5rem, 6vw, 5rem);
+            line-height: 1;
+            color: var(--cream);
+            margin-bottom: 1rem;
+        }
+
+        .verdict-box {
+            background: rgba(220, 38, 38, .08);
+            border: 1px solid rgba(220, 38, 38, .3);
+            border-radius: 12px;
+            padding: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .vb-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .62rem;
+            letter-spacing: .15em;
+            color: var(--red);
+            margin-bottom: .4rem;
+        }
+
+        .vb-value {
+            font-size: 1rem;
+            color: var(--cream);
+            line-height: 1.5
+        }
+
+        .verdict-right {
+            display: flex;
+            flex-direction: column;
+            gap: .9rem
+        }
+
+        .v-item {
+            display: flex;
+            gap: .9rem;
+            align-items: flex-start;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem;
+        }
+
+        .v-num {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            color: var(--orange);
+            line-height: 1;
+            flex-shrink: 0;
+            min-width: 32px;
+        }
+
+        .v-body {}
+
+        .v-title {
+            font-size: .88rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: .2rem
+        }
+
+        .v-desc {
+            font-size: .8rem;
+            color: var(--muted);
+            line-height: 1.5
+        }
+
+        /* ══════════════════════════════════
+   SLIDE 7 — PRÉVENTION
+══════════════════════════════════ */
+        .prev-slide {
+            background: var(--dark);
+            display: grid !important;
+            grid-template-rows: auto 1fr;
+            align-items: start;
+            gap: 1.5rem;
+            padding-top: 3rem !important;
+        }
+
+        .prev-header {
+            width: 100%
+        }
+
+        .prev-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .7rem;
+            letter-spacing: .2em;
+            color: var(--green);
+            margin-bottom: .4rem
+        }
+
+        .prev-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(2rem, 5vw, 3.8rem);
+            color: var(--cream)
+        }
+
+        .prev-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            width: 100%;
+            align-items: start;
+        }
+
+        .prev-col {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .prev-col-letter {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 5rem;
+            color: rgba(255, 255, 255, .03);
+            position: absolute;
+            bottom: -1rem;
+            right: -.5rem;
+            line-height: 1;
+        }
+
+        .col-icon {
+            font-size: 1.6rem;
+            margin-bottom: .6rem
+        }
+
+        .col-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .6rem;
+            letter-spacing: .15em;
+            color: var(--muted);
+            margin-bottom: .3rem;
+        }
+
+        .col-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.3rem;
+            color: var(--cream);
+            margin-bottom: .6rem
+        }
+
+        .col-items {
+            display: flex;
+            flex-direction: column;
+            gap: .4rem
+        }
+
+        .col-item {
+            font-size: .78rem;
+            color: var(--text2);
+            line-height: 1.4;
+            padding-left: .7rem;
+            border-left: 2px solid var(--border);
+        }
+
+        .col-item.highlight {
+            border-left-color: var(--orange);
+            color: var(--text)
+        }
+
+        /* ══════════════════════════════════
+   SLIDE 8 — CERTIFICAT
+══════════════════════════════════ */
+        .cert-slide {
+            background: var(--black);
+            display: grid !important;
+            grid-template-columns: 1fr 1.1fr;
+            gap: 3vw;
+            align-items: center;
+        }
+
+        .cert-left {}
+
+        .cert-left-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .7rem;
+            letter-spacing: .2em;
+            color: var(--amber);
+            margin-bottom: .6rem
+        }
+
+        .cert-left-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(2rem, 5vw, 4rem);
+            color: var(--cream);
+            line-height: 1;
+            margin-bottom: 1rem
+        }
+
+        .cert-checklist {
+            display: flex;
+            flex-direction: column;
+            gap: .7rem
+        }
+
+        .chk {
+            display: flex;
+            gap: .7rem;
+            align-items: flex-start;
+            font-size: .88rem;
+            color: var(--text2);
+            line-height: 1.5
+        }
+
+        .chk-icon {
+            flex-shrink: 0;
+            margin-top: .1rem
+        }
+
+        .chk strong {
+            color: var(--text)
+        }
+
+        .cert-doc {
+            background: var(--cream);
+            color: #1a1a1a;
+            border-radius: 12px;
+            padding: 1.8rem;
+            font-family: 'Crimson Pro', serif;
+            font-size: .82rem;
+            line-height: 1.9;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .5);
+        }
+
+        .cert-doc::before {
+            content: 'CERTIFICAT MÉDICAL INITIAL';
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .55rem;
+            letter-spacing: .2em;
+            color: #888;
+            display: block;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: .6rem;
+            margin-bottom: .8rem;
+        }
+
+        .cert-doc .stamp-red {
+            position: absolute;
+            top: 1rem;
+            right: 1.2rem;
+            border: 2px solid var(--red);
+            color: var(--red);
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1rem;
+            padding: .1rem .5rem;
+            letter-spacing: .08em;
+            transform: rotate(4deg);
+            opacity: .7;
+        }
+
+        .cert-doc b {
+            font-weight: 700
+        }
+
+        .cert-doc .underline {
+            border-bottom: 1px solid #aaa;
+            display: inline-block;
+            min-width: 60px
+        }
+
+        /* ══════════════════════════════════
+   SLIDE 9 — QUESTION AMPHI
+══════════════════════════════════ */
+        .quiz-slide {
+            background: var(--dark);
+            background-image: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(249, 115, 22, .05) 0%, transparent 70%);
+        }
+
+        .quiz-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .75rem;
+            letter-spacing: .2em;
+            color: var(--orange);
+            margin-bottom: 1rem
+        }
+
+        .quiz-q {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(1.8rem, 4.5vw, 3.5rem);
+            color: var(--cream);
+            text-align: center;
+            max-width: 700px;
+            line-height: 1.1;
+            margin-bottom: 2.5rem;
+        }
+
+        .quiz-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            max-width: 680px;
+            width: 100%;
+        }
+
+        .qopt {
+            background: var(--card);
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            padding: 1.2rem 1.4rem;
+            cursor: pointer;
+            transition: all .25s;
+            display: flex;
+            gap: .9rem;
+            align-items: center;
+            text-align: left;
+        }
+
+        .qopt:hover {
+            border-color: var(--orange);
+            background: rgba(249, 115, 22, .07)
+        }
+
+        .qopt.correct-ans {
+            border-color: var(--green);
+            background: rgba(34, 197, 94, .1)
+        }
+
+        .qopt.wrong-ans {
+            border-color: var(--red);
+            background: rgba(220, 38, 38, .08);
+            opacity: .5
+        }
+
+        .qopt-letter {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.8rem;
+            color: var(--muted);
+            line-height: 1;
+            flex-shrink: 0;
+            width: 28px;
+            transition: color .2s;
+        }
+
+        .qopt:hover .qopt-letter {
+            color: var(--orange)
+        }
+
+        .qopt.correct-ans .qopt-letter {
+            color: var(--green)
+        }
+
+        .qopt-text {
+            font-size: .9rem;
+            color: var(--text2);
+            line-height: 1.5
+        }
+
+        .reveal-btn {
+            margin-top: 1.5rem;
+            background: none;
+            border: 1.5px solid var(--orange);
+            color: var(--orange);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .75rem;
+            letter-spacing: .15em;
+            padding: .6rem 1.4rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all .2s;
+            text-transform: uppercase;
+        }
+
+        .reveal-btn:hover {
+            background: rgba(249, 115, 22, .1)
+        }
+
+        .reveal-btn.hidden {
+            display: none
+        }
+
+        /* ══════════════════════════════════
+   SLIDE 10 — FINAL + QR
+══════════════════════════════════ */
+        .final-slide {
+            background: var(--black);
+            background-image:
+                repeating-linear-gradient(0deg, transparent, transparent 49px, rgba(249, 115, 22, .03) 49px, rgba(249, 115, 22, .03) 50px),
+                repeating-linear-gradient(90deg, transparent, transparent 49px, rgba(249, 115, 22, .03) 49px, rgba(249, 115, 22, .03) 50px);
+        }
+
+        .final-tape {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: repeating-linear-gradient(90deg, var(--orange) 0, var(--orange) 24px, var(--amber) 24px, var(--amber) 48px)
+        }
+
+        .final-grid {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 4vw;
+            align-items: center;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .final-left {}
+
+        .final-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .72rem;
+            letter-spacing: .2em;
+            color: var(--orange);
+            margin-bottom: .8rem
+        }
+
+        .final-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(2rem, 6vw, 5rem);
+            color: var(--cream);
+            line-height: 1;
+            margin-bottom: 1.2rem
+        }
+
+        .summary-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .6rem;
+            margin-bottom: 1.4rem
+        }
+
+        .pill {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .65rem;
+            letter-spacing: .1em;
+            padding: .3rem .8rem;
+            border-radius: 20px;
+        }
+
+        .pill.o {
+            background: rgba(249, 115, 22, .15);
+            border: 1px solid rgba(249, 115, 22, .3);
+            color: var(--orange)
+        }
+
+        .pill.g {
+            background: rgba(34, 197, 94, .12);
+            border: 1px solid rgba(34, 197, 94, .25);
+            color: var(--green)
+        }
+
+        .pill.r {
+            background: rgba(220, 38, 38, .12);
+            border: 1px solid rgba(220, 38, 38, .25);
+            color: var(--red)
+        }
+
+        .pill.a {
+            background: rgba(245, 158, 11, .12);
+            border: 1px solid rgba(245, 158, 11, .25);
+            color: var(--amber)
+        }
+
+        .final-msg {
+            font-size: 1rem;
+            font-style: italic;
+            color: var(--text2);
+            line-height: 1.7;
+            max-width: 440px
+        }
+
+        .qr-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: .8rem
+        }
+
+        .qr-frame {
+            width: 180px;
+            height: 180px;
+            border-radius: 16px;
+            background: var(--cream);
+            padding: 12px;
+            box-shadow: 0 0 50px rgba(249, 115, 22, .25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qr-label2 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .62rem;
+            letter-spacing: .12em;
+            color: var(--muted);
+            text-align: center;
+            text-transform: uppercase
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="prog" id="prog"></div>
+    <div class="key-hint">← → ou ESPACE pour naviguer</div>
+
+    <div class="deck" id="deck">
+
+        <!-- ══ SLIDE 0 — COVER ══ -->
+        <div class="slide active" id="s0">
+            <div class="cover-tape"></div>
+            <div class="cover-stamp">CONFIDENTIEL</div>
+            <div class="cover-tag">CAS CLINIQUE N°23 · MÉDECINE DU TRAVAIL</div>
+            <div class="cover-title">
+                L'ENQUÊTE
+                <span class="accent">DE L'ATELIER</span>
+            </div>
+            <div class="cover-subtitle">
+                Qui a étouffé Karim ? — Asthme professionnel & exposition aux isocyanates
+            </div>
+            <div class="cover-case">
+                Peintre automobile · 12 ans d'exposition<br>
+                Tableau RG n°66bis
+            </div>
+        </div>
+
+        <!-- ══ SLIDE 1 — ACTE 1 ══ -->
+        <div class="slide act-slide" id="s1">
+            <div class="act-number">01</div>
+            <div style="position:relative;z-index:2">
+                <div class="act-label">// ACTE 01</div>
+                <div class="act-line"></div>
+                <div class="act-title">LA SCÈNE<br>DE CRIME</div>
+                <div class="act-desc">
+                    Douze ans de pistolet à peinture, de solvants et de vapeurs.
+                    Un matin, le corps dit stop.
+                    <br><br>
+                    <em>Rencontre avec Karim — peintre, père de deux enfants, 38 ans.</em>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ SLIDE 2 — PORTRAIT ══ -->
+        <div class="slide portrait-slide" id="s2">
+            <div class="portrait-left">
+                <div class="portrait-label">VICTIME</div>
+                <div class="portrait-name">KARIM<br>38 ANS</div>
+                <div class="portrait-facts">
+                    <div class="fact">
+                        <div class="fact-label">PROFESSION</div>
+                        <div class="fact-value">Peintre automobile <span class="hl">12 ans</span> d'ancienneté</div>
+                    </div>
+                    <div class="fact">
+                        <div class="fact-label">EXPOSITION</div>
+                        <div class="fact-value">Isocyanates <span class="hl">(HDI/MDI)</span>, solvants organiques,
+                            poussières de ponçage</div>
+                    </div>
+                    <div class="fact">
+                        <div class="fact-label">EPI</div>
+                        <div class="fact-value"><span class="hl" style="color:var(--red)">Inadéquats</span> — masque
+                            chirurgical seul</div>
+                    </div>
+                    <div class="fact">
+                        <div class="fact-label">SYMPTÔMES</div>
+                        <div class="fact-value">Toux nocturne, oppression, sifflement <span class="hl">depuis 2
+                                ans</span></div>
+                    </div>
+                    <div class="fact">
+                        <div class="fact-label">PATTERN</div>
+                        <div class="fact-value">Aggravation au travail · <span class="hl">Amélioration le
+                                week-end</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="portrait-right">
+                <div class="atelier-visual">
+                    <div class="vis-row">
+                        <div class="vis-icon">🎨</div>
+                        <div>
+                            <div style="font-size:.82rem;color:var(--text);margin-bottom:.2rem">Peintures bicomposantes
+                                polyuréthane</div>
+                            <div class="vis-bar" style="--w:90%"></div>
+                        </div>
+                    </div>
+                    <div class="vis-row">
+                        <div class="vis-icon">🧪</div>
+                        <div>
+                            <div style="font-size:.82rem;color:var(--text);margin-bottom:.2rem">Solvants organiques
+                                (xylène, toluène)</div>
+                            <div class="vis-bar" style="--w:75%"></div>
+                        </div>
+                    </div>
+                    <div class="vis-row">
+                        <div class="vis-icon">💨</div>
+                        <div>
+                            <div style="font-size:.82rem;color:var(--text);margin-bottom:.2rem">Ventilation cabine
+                                insuffisante</div>
+                            <div class="vis-bar"
+                                style="--w:40%;background:linear-gradient(90deg,var(--red) 40%,var(--border) 40%)">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="vis-row">
+                        <div class="vis-icon">😷</div>
+                        <div>
+                            <div style="font-size:.82rem;color:var(--text);margin-bottom:.2rem">Protection respiratoire
+                                adaptée</div>
+                            <div class="vis-bar"
+                                style="--w:10%;background:linear-gradient(90deg,var(--red) 10%,var(--border) 10%)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ SLIDE 3 — SCÈNE DE CRIME ══ -->
+        <div class="slide crime-slide" id="s3">
+            <div class="crime-left">
+                <div class="crime-headline">
+                    LE COUPABLE :<br>
+                    <span class="villain">LES ISOCYANATES</span>
+                </div>
+                <div class="crime-body">
+                    "Karim saisit son pistolet. La brume orange envahit la cabine.
+                    Quelques secondes — et la dyspnée frappe comme un poing."
+                </div>
+                <div class="timeline-mini">
+                    <div class="tm-item">
+                        <div class="tm-dot o"></div><span class="tm-year">J–730</span><span>Premières toux nocturnes
+                            ignorées</span>
+                    </div>
+                    <div class="tm-item">
+                        <div class="tm-dot o"></div><span class="tm-year">J–180</span><span>Oppression thoracique
+                            régulière au poste</span>
+                    </div>
+                    <div class="tm-item">
+                        <div class="tm-dot r"></div><span class="tm-year">J–0</span><span>Crise dyspnéique aiguë →
+                            Urgences</span>
+                    </div>
+                    <div class="tm-item">
+                        <div class="tm-dot g"></div><span class="tm-year">J+21</span><span>Retour au travail → Récidive
+                            immédiate</span>
+                    </div>
+                    <div class="tm-item">
+                        <div class="tm-dot g"></div><span class="tm-year">J+30</span><span>Consultation médecine du
+                            travail</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="crime-right">
+                <div class="evidence-card">
+                    <div class="ev-num">01</div>
+                    <div class="ev-body">
+                        <div class="ev-title">Agent sensibilisant</div>
+                        <div class="ev-desc">Isocyanates HDI/MDI — haptènes se liant aux protéines → antigènes complets
+                            → sensibilisation IgE</div>
+                    </div>
+                </div>
+                <div class="evidence-card">
+                    <div class="ev-num">02</div>
+                    <div class="ev-body">
+                        <div class="ev-title">Période de latence</div>
+                        <div class="ev-desc">Quelques mois à années avant sensibilisation complète → puis toute
+                            réexposition déclenche la crise</div>
+                    </div>
+                </div>
+                <div class="evidence-card">
+                    <div class="ev-num">03</div>
+                    <div class="ev-body">
+                        <div class="ev-title">Rythme professionnel</div>
+                        <div class="ev-desc">Aggravation au travail · amélioration le week-end · disparition aux congés
+                            = signature de l'asthme professionnel</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ SLIDE 4 — ACTE 2 ══ -->
+        <div class="slide act-slide" id="s4">
+            <div class="act-number">02</div>
+            <div style="position:relative;z-index:2">
+                <div class="act-label">// ACTE 02</div>
+                <div class="act-line"></div>
+                <div class="act-title">LES<br>PREUVES</div>
+                <div class="act-desc">
+                    Le médecin du travail ouvre le dossier.<br>
+                    Chaque examen est une pièce à conviction.
+                    <br><br>
+                    <em>La vérité est dans les chiffres.</em>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ SLIDE 5 — PREUVES PARACLINIQUES ══ -->
+        <div class="slide proof-slide" id="s5">
+            <div class="proof-header">
+                <div class="proof-tag">// PIÈCES À CONVICTION</div>
+                <div class="proof-title">Le Bilan Paraclinique</div>
+            </div>
+
+            <div class="proof-card">
+                <div class="pc-icon">🫁</div>
+                <div class="pc-label">PIÈCE N°01</div>
+                <div class="pc-name">EFR</div>
+                <div class="pc-result">
+                    VEMS/CVF : <span class="neg">62%</span><br>
+                    Réversibilité sous β2 : <span class="pos">+15%</span><br>
+                    → Syndrome obstructif <span class="pos">réversible</span>
+                </div>
+                <div class="mini-bar-wrap">
+                    <div class="mini-bar-label"><span>VEMS/CVF attendu</span><span>80%</span></div>
+                    <div class="mini-bar">
+                        <div class="mini-fill green" style="--w:80%"></div>
+                    </div>
+                    <div class="mini-bar-label"><span>VEMS/CVF Karim</span><span>62%</span></div>
+                    <div class="mini-bar">
+                        <div class="mini-fill red" style="--w:62%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="proof-card">
+                <div class="pc-icon">📊</div>
+                <div class="pc-label">PIÈCE N°02</div>
+                <div class="pc-name">DEP</div>
+                <div class="pc-result">
+                    Méthode de Burge<br>
+                    Chute au poste : <span class="neg">&gt; 20%</span><br>
+                    Récupération au repos : <span class="pos">confirmée</span>
+                </div>
+                <div class="mini-bar-wrap">
+                    <div class="mini-bar-label"><span>DEP repos</span><span>100%</span></div>
+                    <div class="mini-bar">
+                        <div class="mini-fill green" style="--w:100%"></div>
+                    </div>
+                    <div class="mini-bar-label"><span>DEP au poste</span><span>74%</span></div>
+                    <div class="mini-bar">
+                        <div class="mini-fill orange" style="--w:74%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="proof-card">
+                <div class="pc-icon">⚗️</div>
+                <div class="pc-label">PIÈCE N°03 — GOLD STANDARD</div>
+                <div class="pc-name">TPBS</div>
+                <div class="pc-result">
+                    Test de Provocation<br>Bronchique Spécifique<br>
+                    Isocyanates HDI : <span class="pos">POSITIF ✓</span><br>
+                    → Confirme l'origine professionnelle
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ SLIDE 6 — VERDICT ══ -->
+        <div class="slide verdict-slide" id="s6">
+            <div class="verdict-left">
+                <div class="verdict-tag">// ACTE 03 — LE VERDICT</div>
+                <div class="verdict-title">COUPABLE.<br>RECONNU.</div>
+                <div class="verdict-box">
+                    <div class="vb-label">DIAGNOSTIC RETENU</div>
+                    <div class="vb-value"><strong>Asthme professionnel aux isocyanates</strong><br>Tableau RG n°66bis —
+                        Rhinites & asthmes professionnels</div>
+                </div>
+                <div class="verdict-box" style="background:rgba(245,158,11,.07);border-color:rgba(245,158,11,.3)">
+                    <div class="vb-label" style="color:var(--amber)">APTITUDE</div>
+                    <div class="vb-value">Inaptitude au poste actuel<br><span
+                            style="font-size:.85rem;color:#9ca3af">Reclassement obligatoire · Prise en charge CPAM
+                            AT/MP</span></div>
+                </div>
+            </div>
+
+            <div class="verdict-right">
+                <div class="v-item">
+                    <div class="v-num">01</div>
+                    <div class="v-body">
+                        <div class="v-title">Déclaration MP</div>
+                        <div class="v-desc">Certificat médical initial + déclaration CPAM dans les 15 jours suivant la
+                            1ère constatation médicale</div>
+                    </div>
+                </div>
+                <div class="v-item">
+                    <div class="v-num">02</div>
+                    <div class="v-body">
+                        <div class="v-title">Droits de Karim</div>
+                        <div class="v-desc">Prise en charge 100% · IPP si séquelles · Rente si IPP &gt; 10% · Formation
+                            reconversion</div>
+                    </div>
+                </div>
+                <div class="v-item">
+                    <div class="v-num">03</div>
+                    <div class="v-body">
+                        <div class="v-title">Éviction immédiate</div>
+                        <div class="v-desc">Toute réexposition aux isocyanates même minime aggrave et pérennise la
+                            maladie — irréversible à terme</div>
+                    </div>
+                </div>
+                <div class="v-item">
+                    <div class="v-num">04</div>
+                    <div class="v-body">
+                        <div class="v-title">CRRMP si besoin</div>
+                        <div class="v-desc">Si conditions du tableau non remplies → saisie du Comité Régional de
+                            Reconnaissance des MP</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ SLIDE 7 — PRÉVENTION ══ -->
+        <div class="slide prev-slide" id="s7">
+            <div class="prev-header">
+                <div class="prev-tag">// PRÉVENTION — PRINCIPE STOP</div>
+                <div class="prev-title">Comment Protéger le Prochain Karim ?</div>
+            </div>
+            <div class="prev-grid">
+                <div class="prev-col">
+                    <div class="prev-col-letter">S</div>
+                    <div class="col-icon">🔄</div>
+                    <div class="col-label">PRIORITÉ 1</div>
+                    <div class="col-title">Substitution</div>
+                    <div class="col-items">
+                        <div class="col-item highlight">Peintures à base aqueuse (sans isocyanates)</div>
+                        <div class="col-item">Produits moins sensibilisants</div>
+                        <div class="col-item">Élimination à la source</div>
+                    </div>
+                </div>
+                <div class="prev-col">
+                    <div class="prev-col-letter">T</div>
+                    <div class="col-icon">🏭</div>
+                    <div class="col-label">PRIORITÉ 2</div>
+                    <div class="col-title">Technique</div>
+                    <div class="col-items">
+                        <div class="col-item highlight">Cabine flux laminaire ventilée</div>
+                        <div class="col-item">Aspiration à la source</div>
+                        <div class="col-item">Confinement des zones</div>
+                        <div class="col-item">VME &lt; 0,02 mg/m³</div>
+                    </div>
+                </div>
+                <div class="prev-col">
+                    <div class="prev-col-letter">O</div>
+                    <div class="col-icon">📋</div>
+                    <div class="col-label">PRIORITÉ 3</div>
+                    <div class="col-title">Organisat.</div>
+                    <div class="col-items">
+                        <div class="col-item">Rotation des postes</div>
+                        <div class="col-item">Limitation durée expo</div>
+                        <div class="col-item">Formation travailleurs</div>
+                        <div class="col-item">Affichage FDS</div>
+                    </div>
+                </div>
+                <div class="prev-col">
+                    <div class="prev-col-letter">P</div>
+                    <div class="col-icon">😷</div>
+                    <div class="col-label">PRIORITÉ 4</div>
+                    <div class="col-title">Protection</div>
+                    <div class="col-items">
+                        <div class="col-item highlight">Masque adduction d'air</div>
+                        <div class="col-item">FFP3 + filtre A2P3</div>
+                        <div class="col-item">SMR annuelle + EFR</div>
+                        <div class="col-item">Suivi médical renforcé</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══ SLIDE 8 — CERTIFICAT ══ -->
+        <div class="slide cert-slide" id="s8">
+            <div class="cert-left">
+                <div class="cert-left-tag">// LE DOCUMENT CLÉ</div>
+                <div class="cert-left-title">LE CERTIFICAT<br>MÉDICAL<br>INITIAL</div>
+                <div class="cert-checklist">
+                    <div class="chk"><span class="chk-icon">✅</span><span>Rédigé par <strong>tout médecin</strong>
+                            (généraliste, spécialiste, médecin du travail)</span></div>
+                    <div class="chk"><span class="chk-icon">✅</span><span>Tableau <strong>RG n°66bis</strong> — Rhinites
+                            & asthmes professionnels</span></div>
+                    <div class="chk"><span class="chk-icon">✅</span><span>Déclaration CPAM dans les <strong>15
+                                jours</strong></span></div>
+                    <div class="chk"><span class="chk-icon">✅</span><span>Lien professionnel <strong>documenté</strong>
+                            : exposition + TPBS + rythme</span></div>
+                    <div class="chk"><span class="chk-icon">⚠️</span><span>Si tableau non rempli →
+                            <strong>CRRMP</strong></span></div>
+                </div>
+            </div>
+            <div class="cert-doc">
+                <div class="stamp-red">INITIAL</div>
+                Je soussigné(e), Dr <span
+                    class="underline">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>,
+                certifie avoir examiné ce jour<br>
+                M. Karim <span class="underline">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>, né le <span
+                    class="underline">&nbsp;&nbsp;/&nbsp;&nbsp;/&nbsp;&nbsp;</span><br><br>
+                L'examen clinique et les EFR réalisées mettent en évidence :<br>
+                — Syndrome obstructif réversible (VEMS/CVF &lt; 70%, réversibilité &gt; 12%)<br>
+                — Crises dyspnéiques au poste, améliorées hors travail<br>
+                — TPBS aux isocyanates <b>positif</b><br><br>
+                Ces éléments sont compatibles avec un <b>asthme professionnel aux isocyanates</b> en lien avec son
+                activité de peintre automobile (peintures bicomposantes HDI/MDI).<br><br>
+                Affection relevant du <b>Tableau RG n°66bis</b>.<br><br>
+                Arrêt de travail prescrit à compter du <span
+                    class="underline">&nbsp;&nbsp;/&nbsp;&nbsp;/&nbsp;&nbsp;</span><br><br>
+                Fait à <span class="underline">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>, le <span
+                    class="underline">&nbsp;&nbsp;/&nbsp;&nbsp;/&nbsp;&nbsp;</span><br>
+                <i>Signature & cachet :</i>
+            </div>
+        </div>
+
+        <!-- ══ SLIDE 9 — QUESTION AMPHI ══ -->
+        <div class="slide quiz-slide" id="s9">
+            <div class="quiz-tag">// QUESTION À L'AMPHI — RÉFLÉCHISSEZ !</div>
+            <div class="quiz-q">
+                Selon la hiérarchie STOP,<br>quelle est la mesure de prévention<br>à mettre en place EN PRIORITÉ ?
+            </div>
+            <div class="quiz-options">
+                <div class="qopt" id="qA" onclick="answerQuiz('A')">
+                    <div class="qopt-letter">A</div>
+                    <div class="qopt-text">Distribuer des masques FFP3 à tous les peintres</div>
+                </div>
+                <div class="qopt" id="qB" onclick="answerQuiz('B')">
+                    <div class="qopt-letter">B</div>
+                    <div class="qopt-text">Substituer les peintures aux isocyanates par des produits aqueux</div>
+                </div>
+                <div class="qopt" id="qC" onclick="answerQuiz('C')">
+                    <div class="qopt-letter">C</div>
+                    <div class="qopt-text">Faire des EFR annuelles à tous les travailleurs exposés</div>
+                </div>
+                <div class="qopt" id="qD" onclick="answerQuiz('D')">
+                    <div class="qopt-letter">D</div>
+                    <div class="qopt-text">Afficher les fiches de données de sécurité dans l'atelier</div>
+                </div>
+            </div>
+            <button class="reveal-btn" id="reveal-btn" onclick="revealAnswer()">Révéler la réponse</button>
+        </div>
+
+        <!-- ══ SLIDE 10 — FINAL ══ -->
+        <div class="slide final-slide" id="s10">
+            <div class="final-tape"></div>
+            <div class="final-grid">
+                <div class="final-left">
+                    <div class="final-tag">// FIN DE L'ENQUÊTE</div>
+                    <div class="final-title">L'AFFAIRE<br>EST RÉSOLUE.</div>
+                    <div class="summary-pills">
+                        <div class="pill o">Asthme professionnel</div>
+                        <div class="pill r">Isocyanates HDI/MDI</div>
+                        <div class="pill a">Tableau RG 66bis</div>
+                        <div class="pill g">Substitution en priorité</div>
+                        <div class="pill o">Inaptitude au poste</div>
+                        <div class="pill g">SMR annuelle + EFR</div>
+                        <div class="pill r">TPBS — gold standard</div>
+                        <div class="pill a">Reclassement professionnel</div>
+                    </div>
+                    <div class="final-msg">
+                        Scannez le QR code pour accéder aux 5 QCM interactifs
+                        et tester vos connaissances sur ce cas clinique.
+                    </div>
+                </div>
+                <div class="qr-block">
+                    <div class="qr-frame">
+                        <div id="final-qr"></div>
+                    </div>
+                    <div class="qr-label2">📱 QCM interactif<br>Cas Clinique 23</div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /deck -->
+
+    <!-- ── NAV BAR ── -->
+    <div class="nav">
+        <button class="nav-btn" onclick="go(-1)">←</button>
+        <div class="dot-row" id="dots"></div>
+        <span class="slide-counter" id="counter">1 / 11</span>
+        <button class="nav-btn" onclick="go(1)">→</button>
+    </div>
+
+    <script>
+        const TOTAL = 11;
+        let cur = 0;
+        let quizAnswered = false;
+
+        // Build dots
+        const dotsEl = document.getElementById('dots');
+        for (let i = 0; i < TOTAL; i++) {
+            const d = document.createElement('div');
+            d.className = 'dot' + (i === 0 ? ' on' : '');
+            d.onclick = () => goTo(i);
+            dotsEl.appendChild(d);
+        }
+
+        function updateUI() {
+            document.getElementById('counter').textContent = `${cur + 1} / ${TOTAL}`;
+            document.getElementById('prog').style.width = `${((cur + 1) / TOTAL) * 100}%`;
+            document.querySelectorAll('.dot').forEach((d, i) => d.className = 'dot' + (i === cur ? ' on' : ''));
+        }
+
+        function goTo(n) {
+            const slides = document.querySelectorAll('.slide');
+            slides[cur].classList.remove('active');
+            slides[cur].classList.add('exit');
+            setTimeout(() => slides[cur].classList.remove('exit'), 500);
+            cur = Math.max(0, Math.min(TOTAL - 1, n));
+            slides[cur].classList.add('active');
+            updateUI();
+        }
+
+        function go(d) { goTo(cur + d); }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'ArrowRight' || e.key === ' ') go(1);
+            if (e.key === 'ArrowLeft') go(-1);
+        });
+
+        // Quiz interaction
+        function answerQuiz(letter) {
+            if (quizAnswered) return;
+            document.getElementById('reveal-btn').classList.remove('hidden');
+        }
+
+        function revealAnswer() {
+            quizAnswered = true;
+            ['A', 'B', 'C', 'D'].forEach(l => {
+                const el = document.getElementById('q' + l);
+                if (l === 'B') el.classList.add('correct-ans');
+                else el.classList.add('wrong-ans');
+            });
+            document.getElementById('reveal-btn').style.display = 'none';
+        }
+
+        // QR code for final slide — points to QCM file
+        new QRCode(document.getElementById("final-qr"), {
+            text: "https://claude.ai",
+            width: 148, height: 148,
+            colorDark: "#f97316",
+            colorLight: "#f5f0e8",
+            correctLevel: QRCode.CorrectLevel.M
+        });
+
+        updateUI();
+    </script>
+</body>
+
+</html>
